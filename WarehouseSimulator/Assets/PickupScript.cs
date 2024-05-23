@@ -36,7 +36,7 @@ public class PickupScript : MonoBehaviour
                 if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out hit, pickUpRange))
                 {
                     //make sure pickup tag is attached
-                    if (hit.transform.gameObject.tag == "canPickUp")
+                    if (hit.transform.gameObject.tag == "canPickUp" || hit.transform.gameObject.tag == "laptop")
                     {
                         //pass in object hit into the PickUpObject function
                         PickUpObject(hit.transform.gameObject);
@@ -69,9 +69,8 @@ public class PickupScript : MonoBehaviour
         //if (pickUpObj.GetComponent<Rigidbody>()) //make sure the object has a RigidBody
         //{
             heldObj = pickUpObj; //assign heldObj to the object that was hit by the raycast (no longer == null)
-            //heldObj.isStatic = false;
-            //heldObjRb = pickUpObj.GetComponent<Rigidbody>(); //assign Rigidbody
-            //heldObjRb.isKinematic = true;
+            heldObjRb = pickUpObj.GetComponent<Rigidbody>(); //assign Rigidbody
+            heldObjRb.freezeRotation = true;
             heldObj.transform.parent = holdPos.transform; //parent object to holdposition
             heldObj.layer = LayerNumber; //change the object layer to the holdLayer
             //make sure object doesnt collide with player, it can cause weird bugs
@@ -82,8 +81,7 @@ public class PickupScript : MonoBehaviour
     {
         //re-enable collision with player
         heldObj.layer = 0; //object assigned back to default layer
-        //heldObj.isStatic = true;
-        //heldObjRb.isKinematic = false;
+        heldObjRb.freezeRotation = false;
         heldObj.transform.parent = null; //unparent object
         heldObj = null; //undefine game object
         Physics.IgnoreCollision(heldObj.GetComponent<Collider>(), player.GetComponent<Collider>(), false);
@@ -97,6 +95,7 @@ public class PickupScript : MonoBehaviour
     {
         if (Input.GetKey(KeyCode.R))//hold R key to rotate, change this to whatever key you want
         {
+            heldObjRb.freezeRotation = false;
             canDrop = false; //make sure throwing can't occur during rotating
 
             //disable player being able to look around
@@ -115,6 +114,7 @@ public class PickupScript : MonoBehaviour
             //mouseLookScript.verticalSensitivity = originalvalue;
             //mouseLookScript.lateralSensitivity = originalvalue;
             canDrop = true;
+            heldObjRb.freezeRotation = true;
         }
     }
     void ThrowObject()
