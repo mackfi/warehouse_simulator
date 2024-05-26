@@ -431,6 +431,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Containerbigin02
       objectReference: {fileID: 0}
+    - target: {fileID: 136532, guid: 3daec3401078b2d439da0d327b23ade2, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 439798, guid: 3daec3401078b2d439da0d327b23ade2, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.5
@@ -2713,6 +2717,10 @@ PrefabInstance:
     - target: {fileID: 151222, guid: 5b88351b0e50b5d4da837eb319fa749f, type: 3}
       propertyPath: m_Name
       value: Containerbigin01
+      objectReference: {fileID: 0}
+    - target: {fileID: 151222, guid: 5b88351b0e50b5d4da837eb319fa749f, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 440638, guid: 5b88351b0e50b5d4da837eb319fa749f, type: 3}
       propertyPath: m_LocalScale.x
