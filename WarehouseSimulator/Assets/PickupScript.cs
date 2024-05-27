@@ -1,6 +1,7 @@
 using Castle.Components.DictionaryAdapter.Xml;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class PickupScript : MonoBehaviour
@@ -13,9 +14,10 @@ public class PickupScript : MonoBehaviour
     private float rotationSensitivity = 1f; //how fast/slow the object is rotated in relation to mouse movement
     private GameObject heldObj; //object which we pick up
     private Rigidbody heldObjRb; //rigidbody of object we pick up
+    private MeshRenderer heldObjMr;
     private bool canDrop = true; //this is needed so we don't throw/drop object when rotating the object
     private int LayerNumber; //layer index
-    private MeshRenderer lastMaterial;
+    private MeshRenderer lastMaterial = new MeshRenderer();
     MeshRenderer tempMaterial;
 
     //Reference to script which includes mouse movement of player (looking around)
@@ -24,7 +26,7 @@ public class PickupScript : MonoBehaviour
     //MouseLookScript mouseLookScript;
     void Start()
     {
-        LayerNumber = LayerMask.NameToLayer("holdLayer"); //if your holdLayer is named differently make sure to change this ""
+        LayerNumber = LayerMask.NameToLayer("Ignore Raycast");
 
         //mouseLookScript = player.GetComponent<MouseLookScript>();
     }
@@ -34,17 +36,51 @@ public class PickupScript : MonoBehaviour
         if (heldObj == null && Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out hit1, pickUpRange) && hit1.transform.gameObject.tag == "canPickUp")
         {
             bool hasMeshComponent = hit1.transform.gameObject.TryGetComponent<MeshRenderer>(out tempMaterial);
-            if (hit1.transform.gameObject.tag == "canPickUp" && hasMeshComponent)
+            if ((hit1.transform.gameObject.tag == "canPickUp") && hasMeshComponent)
             {
-                //lastMaterial = hit1.transform.gameObject.GetComponent<Material>();
                 tempMaterial.material.color = Color.green;
-
             }
+            if (lastMaterial != null && lastMaterial != tempMaterial)
+            {
+                lastMaterial.material.color = Color.white;
+            }
+            lastMaterial = tempMaterial;
+        }
+        else if (heldObj != null && Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out hit1, pickUpRange) && hit1.transform.gameObject.tag == "dockConveyorEntry")
+        {
+            if (tempMaterial != lastMaterial && lastMaterial != null)
+            {
+                lastMaterial.material.color = Color.white;
+            }
+            bool hasMeshComponent = hit1.transform.gameObject.TryGetComponent<MeshRenderer>(out tempMaterial);
+            if ((hit1.transform.gameObject.tag == "dockConveyorEntry") && hasMeshComponent)
+            {
+                /*hit1.transform.parent.GetChild(0).GetComponent<MeshRenderer>().material.color = Color.green;
+                hit1.transform.parent.GetChild(1).GetComponent<MeshRenderer>().material.color = Color.green;
+                hit1.transform.parent.GetChild(2).GetComponent<MeshRenderer>().material.color = Color.green;
+                hit1.transform.parent.GetChild(3).GetComponent<MeshRenderer>().material.color = Color.green;
+                hit1.transform.parent.GetChild(4).GetComponent<MeshRenderer>().material.color = Color.green;
+                hit1.transform.parent.GetChild(5).GetComponent<MeshRenderer>().material.color = Color.green;*/
+                tempMaterial.material.color = Color.green;
+            }
+            if (lastMaterial != null && lastMaterial != tempMaterial)
+            {
+                /*hit1.transform.parent.GetChild(0).GetComponent<MeshRenderer>().material.color = Color.white;
+                hit1.transform.parent.GetChild(1).GetComponent<MeshRenderer>().material.color = Color.white;
+                hit1.transform.parent.GetChild(2).GetComponent<MeshRenderer>().material.color = Color.white;
+                hit1.transform.parent.GetChild(3).GetComponent<MeshRenderer>().material.color = Color.white;
+                hit1.transform.parent.GetChild(4).GetComponent<MeshRenderer>().material.color = Color.white;
+                hit1.transform.parent.GetChild(5).GetComponent<MeshRenderer>().material.color = Color.white;*/
+                lastMaterial.material.color = Color.white;
+            }
+            lastMaterial = tempMaterial;
         }
         else
         {
             if (tempMaterial != null)
+            {
                 tempMaterial.material.color = Color.white;
+            }
         }
         RaycastHit hit;
         if (Input.GetKeyDown(KeyCode.Mouse0)) //change E to whichever key you want to press to pick up
@@ -89,6 +125,8 @@ public class PickupScript : MonoBehaviour
         //{
             heldObj = pickUpObj; //assign heldObj to the object that was hit by the raycast (no longer == null)
             heldObjRb = pickUpObj.GetComponent<Rigidbody>(); //assign Rigidbody
+            //heldObjMr = pickUpObj.GetComponent<MeshRenderer>();
+            //heldObjMr.material.color = new Color(1, 1, 1, 0.5f);
             heldObjRb.freezeRotation = true;
             heldObj.transform.parent = holdPos.transform; //parent object to holdposition
             heldObj.layer = LayerNumber; //change the object layer to the holdLayer
@@ -102,6 +140,7 @@ public class PickupScript : MonoBehaviour
         heldObj.layer = 0; //object assigned back to default layer
         heldObjRb.velocity = Vector3.zero;
         heldObjRb.freezeRotation = false;
+        //heldObjMr.material.color = Color.white;
         heldObj.transform.parent = null; //unparent object
         heldObj = null; //undefine game object
         Physics.IgnoreCollision(heldObj.GetComponent<Collider>(), player.GetComponent<Collider>(), false);

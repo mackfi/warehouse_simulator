@@ -6,6 +6,7 @@ TagManager:
   tags:
   - canPickUp
   - laptop
+  - dockConveyorEntry
   layers:
   - Default
   - TransparentFX
