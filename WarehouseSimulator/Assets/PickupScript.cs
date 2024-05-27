@@ -128,6 +128,9 @@ public class PickupScript : MonoBehaviour
             //heldObjMr = pickUpObj.GetComponent<MeshRenderer>();
             //heldObjMr.material.color = new Color(1, 1, 1, 0.5f);
             heldObjRb.freezeRotation = true;
+
+            heldObj.GetComponent<Collider>().enabled = false;
+
             heldObj.transform.parent = holdPos.transform; //parent object to holdposition
             heldObj.layer = LayerNumber; //change the object layer to the holdLayer
             //make sure object doesnt collide with player, it can cause weird bugs
@@ -140,6 +143,9 @@ public class PickupScript : MonoBehaviour
         heldObj.layer = 0; //object assigned back to default layer
         heldObjRb.velocity = Vector3.zero;
         heldObjRb.freezeRotation = false;
+
+        heldObj.GetComponent<Collider>().enabled = true;
+
         //heldObjMr.material.color = Color.white;
         heldObj.transform.parent = null; //unparent object
         heldObj = null; //undefine game object
