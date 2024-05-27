@@ -1,3 +1,4 @@
+using Castle.Components.DictionaryAdapter.Xml;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -14,6 +15,8 @@ public class PickupScript : MonoBehaviour
     private Rigidbody heldObjRb; //rigidbody of object we pick up
     private bool canDrop = true; //this is needed so we don't throw/drop object when rotating the object
     private int LayerNumber; //layer index
+    private MeshRenderer lastMaterial;
+    MeshRenderer tempMaterial;
 
     //Reference to script which includes mouse movement of player (looking around)
     //we want to disable the player looking around when rotating the object
@@ -27,12 +30,28 @@ public class PickupScript : MonoBehaviour
     }
     void Update()
     {
+        RaycastHit hit1;
+        if (heldObj == null && Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out hit1, pickUpRange) && hit1.transform.gameObject.tag == "canPickUp")
+        {
+            bool hasMeshComponent = hit1.transform.gameObject.TryGetComponent<MeshRenderer>(out tempMaterial);
+            if (hit1.transform.gameObject.tag == "canPickUp" && hasMeshComponent)
+            {
+                //lastMaterial = hit1.transform.gameObject.GetComponent<Material>();
+                tempMaterial.material.color = Color.green;
+
+            }
+        }
+        else
+        {
+            if (tempMaterial != null)
+                tempMaterial.material.color = Color.white;
+        }
+        RaycastHit hit;
         if (Input.GetKeyDown(KeyCode.Mouse0)) //change E to whichever key you want to press to pick up
         {
             if (heldObj == null) //if currently not holding anything
             {
                 //perform raycast to check if player is looking at object within pickuprange
-                RaycastHit hit;
                 if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out hit, pickUpRange))
                 {
                     //make sure pickup tag is attached
@@ -81,6 +100,7 @@ public class PickupScript : MonoBehaviour
     {
         //re-enable collision with player
         heldObj.layer = 0; //object assigned back to default layer
+        heldObjRb.velocity = Vector3.zero;
         heldObjRb.freezeRotation = false;
         heldObj.transform.parent = null; //unparent object
         heldObj = null; //undefine game object
