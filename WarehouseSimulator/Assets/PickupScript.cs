@@ -90,10 +90,8 @@ public class PickupScript : MonoBehaviour
                 //perform raycast to check if player is looking at object within pickuprange
                 if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out hit, pickUpRange))
                 {
-                    //make sure pickup tag is attached
-                    if (hit.transform.gameObject.tag == "canPickUp" || hit.transform.gameObject.tag == "laptop")
+                    if (hit.transform.gameObject.tag == "canPickUp")//|| hit.transform.gameObject.tag == "laptop"
                     {
-                        //pass in object hit into the PickUpObject function
                         PickUpObject(hit.transform.gameObject);
                     }
                 }
