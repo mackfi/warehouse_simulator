@@ -127,6 +127,7 @@ public class PickupScript : MonoBehaviour
         //{
             heldObj = pickUpObj; //assign heldObj to the object that was hit by the raycast (no longer == null)
             heldObjRb = pickUpObj.GetComponent<Rigidbody>(); //assign Rigidbody
+            heldObj.transform.rotation = Quaternion.identity;
             //heldObjMr = pickUpObj.GetComponent<MeshRenderer>();
             //heldObjMr.material.color = new Color(1, 1, 1, 0.5f);
             heldObjRb.freezeRotation = true;

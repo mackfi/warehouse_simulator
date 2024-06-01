@@ -19,14 +19,17 @@ public class TimeUIScript : MonoBehaviour
     System.Timers.Timer timer;
     private List<GameObject> trailers = new List<GameObject>();
     private List<DateTime> arrivalTimes = new List<DateTime>();
+    private List<GameObject> trailerDoors = new List<GameObject>();
     public GameObject trailerTemplate;
+    public GameObject trailerDoorTemplate;
     int currTrailer = 0;
+    int trailerDepart = 0;
 
     // Start is called before the first frame update
     void Start()
     {
         textMesh.text = dt.ToString("H:mm");
-        NewDay(2);
+        NewDay(2, 2);
     }
 
     void Update()
@@ -48,11 +51,16 @@ public class TimeUIScript : MonoBehaviour
                 TrailerArrival(currTrailer, currTrailer);
                 currTrailer++;
             }
+            if (arrivalTimes.Contains(dt.AddHours(-3)))
+            {
+                TrailerDepart(trailerDepart, trailerDepart);
+                trailerDepart++;
+            }
         }
 
     }
 
-    private void NewDay(int trailerNum)
+    private void NewDay(int trailerNum, int doorNum)
     {
         trailers.Clear();
         for (int i = 0; i < trailerNum; i++)
@@ -62,12 +70,25 @@ public class TimeUIScript : MonoBehaviour
             trailers.Add(trailer);
             arrivalTimes.Add(dt.AddHours(i*2 + 1));
         }
+
+        for (int i = 0; i < doorNum; i++)
+        {
+            var trailerDoor = Instantiate(trailerDoorTemplate, new Vector3(-37.8f, 0f, -7.4f + 14.8f * i), Quaternion.identity);
+            trailerDoors.Add(trailerDoor);
+        }
     }
 
     private void TrailerArrival(int index, int doorNum)
     {
         trailers[index].transform.position = new Vector3(-53f, -2.8f, -8f + 14.5f*doorNum);
         trailers[index].SetActive(true);
+        trailerDoors[index].transform.position += 4 * Vector3.up;
+    }
+
+    private void TrailerDepart(int index, int doorNum)
+    {
+        trailers[index].SetActive(false);
+        trailerDoors[index].transform.position -= 4 * Vector3.up;
     }
 
 }
