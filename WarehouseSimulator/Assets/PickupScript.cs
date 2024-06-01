@@ -94,6 +94,10 @@ public class PickupScript : MonoBehaviour
                     {
                         PickUpObject(hit.transform.gameObject);
                     }
+                    else if (hit.transform.gameObject.tag == "pallet")//|| hit.transform.gameObject.tag == "laptop"
+                    {
+                        PickupPallet(hit.transform.gameObject);
+                    }
                 }
             }
             else
@@ -135,6 +139,16 @@ public class PickupScript : MonoBehaviour
             Physics.IgnoreCollision(heldObj.GetComponent<Collider>(), player.GetComponent<Collider>(), true);
         //}
     }
+
+    void PickupPallet(GameObject pickUpObj)
+    {
+        //var parent = pickUpObj.transform.parent;
+        //foreach (var child in parent)
+        //{
+            
+        //}
+    }
+
     void DropObject()
     {
         //re-enable collision with player

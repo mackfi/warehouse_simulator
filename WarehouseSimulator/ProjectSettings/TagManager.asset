@@ -7,6 +7,7 @@ TagManager:
   - canPickUp
   - laptop
   - dockConveyorEntry
+  - pallet
   layers:
   - Default
   - TransparentFX
