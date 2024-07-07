@@ -13,7 +13,8 @@ public class PickupScript : MonoBehaviour
     public float pickUpRange = 5f; //how far the player can pickup the object from
     private float rotationSensitivity = 1f; //how fast/slow the object is rotated in relation to mouse movement
     private GameObject heldObj; //object which we pick up
-    private Rigidbody heldObjRb; //rigidbody of object we pick up
+    private GameObject heldItem; // helper items (scanners, pallet jacks, etc.)
+    private Rigidbody heldItemRb; //rigidbody of item we pick up
     private MeshRenderer heldObjMr;
     private bool canDrop = true; //this is needed so we don't throw/drop object when rotating the object
     private int LayerNumber; //layer index
@@ -46,6 +47,21 @@ public class PickupScript : MonoBehaviour
             }
             lastMaterial = tempMaterial;
         }
+
+        else if (heldObj == null && Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out hit1, pickUpRange) && hit1.transform.gameObject.tag == "palletJack")
+        {
+            bool hasMeshComponent = hit1.transform.gameObject.TryGetComponent<MeshRenderer>(out tempMaterial);
+            if ((hit1.transform.gameObject.tag == "palletJack") && hasMeshComponent)
+            {
+                tempMaterial.material.color = Color.green;
+            }
+            if (lastMaterial != null && lastMaterial != tempMaterial)
+            {
+                lastMaterial.material.color = Color.white;
+            }
+            lastMaterial = tempMaterial;
+        }
+
         else if (heldObj != null && Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out hit1, pickUpRange) && hit1.transform.gameObject.tag == "dockConveyorEntry")
         {
             if (tempMaterial != lastMaterial && lastMaterial != null)
@@ -85,7 +101,7 @@ public class PickupScript : MonoBehaviour
         RaycastHit hit;
         if (Input.GetKeyDown(KeyCode.Mouse0)) //change E to whichever key you want to press to pick up
         {
-            if (heldObj == null) //if currently not holding anything
+            if (heldObj == null || heldItem != null) //if currently not holding anything
             {
                 //perform raycast to check if player is looking at object within pickuprange
                 if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out hit, pickUpRange))
@@ -94,9 +110,21 @@ public class PickupScript : MonoBehaviour
                     {
                         PickUpObject(hit.transform.gameObject);
                     }
-                    else if (hit.transform.gameObject.tag == "pallet")//|| hit.transform.gameObject.tag == "laptop"
+                    else if (hit.transform.gameObject.tag == "palletJack")
+                    {
+                        PickUpItem(hit.transform.gameObject);
+                    }
+                    else if (heldItem.tag == "palletJack" && hit.transform.gameObject.tag == "pallet")
                     {
                         PickupPallet(hit.transform.gameObject);
+                    }
+                }
+                else if (heldItem.tag == "palletJack")
+                {
+                    if (canDrop)
+                    {
+                        StopClipping(); //prevents object from clipping through walls
+                        DropObject();
                     }
                 }
             }
@@ -109,7 +137,7 @@ public class PickupScript : MonoBehaviour
                 }
             }
         }
-        if (heldObj != null) //if player is holding object
+        if (heldObj != null || heldItem != null) //if player is holding object
         {
             MoveObject(); //keep object position at holdPos
             RotateObject();
@@ -126,11 +154,11 @@ public class PickupScript : MonoBehaviour
         //if (pickUpObj.GetComponent<Rigidbody>()) //make sure the object has a RigidBody
         //{
             heldObj = pickUpObj; //assign heldObj to the object that was hit by the raycast (no longer == null)
-            heldObjRb = pickUpObj.GetComponent<Rigidbody>(); //assign Rigidbody
+            //heldObjRb = pickUpObj.GetComponent<Rigidbody>(); //assign Rigidbody
             heldObj.transform.rotation = Quaternion.identity;
             //heldObjMr = pickUpObj.GetComponent<MeshRenderer>();
             //heldObjMr.material.color = new Color(1, 1, 1, 0.5f);
-            heldObjRb.freezeRotation = true;
+            //heldObjRb.freezeRotation = true;
 
             heldObj.GetComponent<Collider>().enabled = false;
 
@@ -141,21 +169,53 @@ public class PickupScript : MonoBehaviour
         //}
     }
 
+    void PickUpItem(GameObject pickUpObj)
+    {
+        //if (pickUpObj.GetComponent<Rigidbody>()) //make sure the object has a RigidBody
+        //{
+        heldItem = pickUpObj; //assign heldObj to the object that was hit by the raycast (no longer == null)
+        heldItemRb = pickUpObj.GetComponent<Rigidbody>(); //assign Rigidbody
+        heldItem.transform.rotation = new Quaternion(0, 90, 0, 1);
+
+        heldItemRb.freezeRotation = true;
+
+        heldItem.GetComponent<Collider>().enabled = false;
+
+        heldItem.transform.parent = holdPos.transform; //parent object to holdposition
+        heldItem.layer = LayerNumber; //change the object layer to the holdLayer
+                                      //make sure object doesnt collide with player, it can cause weird bugs
+        Physics.IgnoreCollision(heldItem.GetComponent<Collider>(), player.GetComponent<Collider>(), true);
+        //}
+    }
+
     void PickupPallet(GameObject pickUpObj)
     {
-        //var parent = pickUpObj.transform.parent;
-        //foreach (var child in parent)
-        //{
-            
-        //}
+        pickUpObj = pickUpObj.transform.parent.gameObject;
+        //pickUpObj = pickUpObj.transform.GetChild(0).gameObject;
+        GameObject palletObject = pickUpObj.transform.GetChild(0).gameObject;
+        heldObj = pickUpObj;
+        heldItemRb = pickUpObj.GetComponent<Rigidbody>();
+        var palletRb = palletObject.GetComponent<Rigidbody>();
+        heldItemRb.freezeRotation = true;
+        palletRb.freezeRotation = true;
+
+        heldObj.GetComponent<Collider>().enabled = false;
+
+        heldObj.transform.parent = holdPos.transform; //parent object to holdposition
+        heldObj.layer = LayerNumber; //change the object layer to the holdLayer
+                                     //make sure object doesnt collide with player, it can cause weird bugs
+        Physics.IgnoreCollision(heldObj.GetComponent<Collider>(), player.GetComponent<Collider>(), true);
     }
 
     void DropObject()
     {
         //re-enable collision with player
         heldObj.layer = 0; //object assigned back to default layer
-        heldObjRb.velocity = Vector3.zero;
-        heldObjRb.freezeRotation = false;
+        heldItemRb.velocity = Vector3.zero;
+        heldItemRb.freezeRotation = false;
+        //heldObjRb.velocity = Vector3.zero;
+        //heldObjRb.freezeRotation = false;
+        heldObj.isStatic = false;
 
         heldObj.GetComponent<Collider>().enabled = true;
 
@@ -167,13 +227,24 @@ public class PickupScript : MonoBehaviour
     void MoveObject()
     {
         //keep object position the same as the holdPosition position
-        heldObj.transform.position = holdPos.transform.position;
+        if (heldObj != null && heldObj.tag == "pallet")
+        {
+            heldObj.transform.position = new Vector3(holdPos.transform.position.x, 0, holdPos.transform.position.z);
+        }
+        else if (heldObj != null)
+        {
+            heldObj.transform.position = holdPos.transform.position;
+        }
+        if (heldItem != null)
+        {
+            heldItem.transform.position = holdPos.transform.position + holdPos.transform.right;
+        }
     }
     void RotateObject()
     {
         if (Input.GetKey(KeyCode.R))//hold R key to rotate, change this to whatever key you want
         {
-            heldObjRb.freezeRotation = false;
+            heldItemRb.freezeRotation = false;
             canDrop = false; //make sure throwing can't occur during rotating
 
             //disable player being able to look around
@@ -192,7 +263,7 @@ public class PickupScript : MonoBehaviour
             //mouseLookScript.verticalSensitivity = originalvalue;
             //mouseLookScript.lateralSensitivity = originalvalue;
             canDrop = true;
-            heldObjRb.freezeRotation = true;
+            heldItemRb.freezeRotation = true;
         }
     }
     void ThrowObject()
@@ -200,9 +271,9 @@ public class PickupScript : MonoBehaviour
         //same as drop function, but add force to object before undefining it
         Physics.IgnoreCollision(heldObj.GetComponent<Collider>(), player.GetComponent<Collider>(), false);
         heldObj.layer = 0;
-        heldObjRb.isKinematic = false;
+        heldItemRb.isKinematic = false;
         heldObj.transform.parent = null;
-        heldObjRb.AddForce(transform.forward * throwForce);
+        heldItemRb.AddForce(transform.forward * throwForce);
         heldObj = null;
     }
     void StopClipping() //function only called when dropping/throwing
